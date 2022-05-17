@@ -19,3 +19,13 @@ This part describes the workflow of this project.
 The idea : To seperate the publication of the .pdf file and the cloud function pull of Brawl Star data will enabled to save time and therefore money.
 
 ![workflow](/images/complete_workflow.svg)
+
+TODO
+
+- Change picture for correct workflow
+- Add classes
+    - The class `Club` is characterized by its `clubTag`, `clubName`, `description`, `requiredTrophies`, and `trophies`.
+    - It is composed of members, instances of the class `Player` characterized by its `playerTag`, `name`.
+    - Each player is represented by the instance of the class `Brawler` characterized by `name`, `power`, `trophies`.
+    - The class `Game` represents a fight between players is charaterized by `battleTime`, `mode`, `map`, `result`, `duration` and eventually `type` and `trophyChange` .
+    - The class `Ranking` would allow to JOIN data with club and the attribute `seasonId` would enable to look at the progression of clubs and players.
