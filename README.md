@@ -1,3 +1,5 @@
+App located at: https://odysseu.github.io/Brawlstar-Club-Dashboard.github.io/
+
 # Brawlstar-Club-Dashboard
 
 ## Goal of this project
