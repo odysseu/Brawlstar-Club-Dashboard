@@ -9,6 +9,7 @@ def get_brawler(tag, line, battle_details):
             for player in team:
                 if tag == player["tag"]:
                     brawler = player["brawler"]["name"]
+        brawler = brawler.replace("\n", " ")
         line["brawler"] = brawler
     return line
 
@@ -61,4 +62,22 @@ def get_match_details(line, battle_details):
     line["mode"] = battle_details['mode']
     if "result" in battle_details:
         line["result"] = battle_details["result"]
+    if "type" in battle_details:
+        line["type"] = battle_details["type"]
+    return line
+
+
+def get_map(line, event):
+    line["map_id"] = str(event["id"])
+    line["map_name"] = event["map"]
+    return line
+
+
+def get_starplayer(line, tag, battle_details):
+    is_sp = False
+    if "starPlayer" in battle_details and battle_details["starPlayer"] is not None:
+        starplayer = battle_details["starPlayer"]
+        tag_starplayer = starplayer["tag"]
+        is_sp = tag == tag_starplayer
+    line["starplayer"] = is_sp
     return line

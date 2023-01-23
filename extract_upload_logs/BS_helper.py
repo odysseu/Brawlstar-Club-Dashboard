@@ -1,7 +1,10 @@
 import requests
+import pytz
+from datetime import datetime, timedelta
 from google.cloud import bigquery
 from match_league_processor import get_brawler, get_season, get_day, get_datetime
 from match_league_processor import get_seasonday, get_player, get_timestamp, get_match_details
+from match_league_processor import get_map, get_starplayer
 
 
 class BS_helper:
@@ -59,29 +62,43 @@ class BS_helper:
         )
         return r.json()["items"]
 
+
+    def get_current_season(self):
+        tz = pytz.timezone("Europe/Paris")
+        now = datetime.now(tz=tz)+ timedelta(days=-1)
+        # WEEK 18 OF YEAR 2022 TO BE THE SAISON 0 OF THE RECORDS
+        current_season = "Saison " + str(int(now.strftime("%Y%W")) - 202218)
+        return current_season
+
+
     def get_club_league_matchs(self, name, tag, battlelog):
+        current_season = self.get_current_season()
         lines = []
         for battle in battlelog:
             time = battle["battleTime"]
-            battle_details = battle["battle"]
-            line = {}
-            line = get_brawler(tag, line, battle_details)
-            line = get_season(line, time)
-            line = get_day(line, time)
-            line = get_datetime(line, time)
-            line = get_timestamp(line, time)
-            line = get_seasonday(line)
-            line = get_player(line, name, tag)
-            line = get_match_details(line, battle_details)
-            if 'type' in battle_details and battle_details['type'] == "teamRanked" and 'trophyChange' in battle_details:
-                line["used_tickets"] = 2
-                line["with_club_mate"] = line["points"] in [9, 5]
-                lines.append(line)
-            elif 'mode' in battle_details and battle_details['mode'] != "soloShowdown" and battle_details['mode'] != "duoShowdown" and 'type' in battle_details and battle_details['type'] != 'challenge':
-                if 'trophyChange' in battle_details and battle_details['trophyChange'] > 0 and battle_details['trophyChange'] < 5:
-                    line["used_tickets"] = 1
-                    line["with_club_mate"] = line["points"] in [4, 3]
+            if "battle" in battle:
+                battle_details = battle["battle"]
+                event = battle["event"]
+                line = {}
+                line = get_brawler(tag, line, battle_details)
+                line = get_season(line, time)
+                line = get_day(line, time)
+                line = get_datetime(line, time)
+                line = get_timestamp(line, time)
+                line = get_seasonday(line)
+                line = get_player(line, name, tag)
+                line = get_map(line, event)
+                line = get_starplayer(line, tag, battle_details)
+                line = get_match_details(line, battle_details)
+                if 'type' in battle_details and battle_details['type'] == "teamRanked" and 'trophyChange' in battle_details and line["season"]==current_season:
+                    line["used_tickets"] = 2
+                    line["with_club_mate"] = line["points"] in [9, 5]
                     lines.append(line)
+                elif 'mode' in battle_details and battle_details['mode'] != "soloShowdown" and battle_details['mode'] != "duoShowdown" and 'type' in battle_details and battle_details['type'] != 'challenge' and battle_details['type'] != "championshipChallenge" and line["season"]==current_season:
+                    if 'trophyChange' in battle_details and 0 < battle_details['trophyChange'] < 5:
+                        line["used_tickets"] = 1
+                        line["with_club_mate"] = line["points"] in [4, 3]
+                        lines.append(line)
         return lines
 
     def get_current_db(self):
